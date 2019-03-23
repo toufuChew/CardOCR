@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#ffffff"
+    tools:context="com.toufuchew.cardocr.camera.CameraActivity">
+
+    <com.toufuchew.cardocr.camera.view.CameraSurfaceView
+        android:id="@+id/surface_view"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_centerHorizontal="true"/>
+    
+    <com.toufuchew.cardocr.camera.view.ViewShadow
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
+
+    <TextView
+        android:id="@+id/focus_hint"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerInParent="true"
+        android:layout_gravity="center_vertical|end"
+
+        android:text="请把银行卡放入取景框,水平拍摄"
+        android:textColor="#fff" />
+
+    <Button
+        android:id="@+id/btn_cancle"
+        android:layout_width="49dp"
+        android:layout_height="50dp"
+        android:layout_alignBottom="@+id/btn_shoot"
+        android:layout_alignParentEnd="true"
+        android:layout_gravity="top|end"
+        android:layout_marginEnd="6dp"
+        android:background="@drawable/ic_cancel"
+        android:visibility="gone" />
+
+    <Button
+        android:id="@+id/btn_shoot"
+        android:layout_width="70dp"
+        android:layout_height="70dp"
+        android:layout_alignParentBottom="true"
+        android:layout_centerHorizontal="true"
+        android:layout_gravity="center_vertical|end"
+        android:layout_marginBottom="5dp"
+        android:background="@drawable/ic_shooting" />
+
+    <Button
+        android:id="@+id/btn_ocr"
+        android:layout_width="49dp"
+        android:layout_height="49dp"
+        android:layout_alignBottom="@+id/btn_shoot"
+        android:layout_alignParentStart="true"
+        android:layout_gravity="bottom|end"
+        android:layout_marginStart="6dp"
+        android:background="@drawable/ic_ocr"
+        android:visibility="gone" />
+
+    <ImageView
+        android:id="@+id/image_view"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerInParent="true"
+        android:layout_gravity="center_vertical|end"
+        android:visibility="gone"/>
+
+</RelativeLayout>
+
