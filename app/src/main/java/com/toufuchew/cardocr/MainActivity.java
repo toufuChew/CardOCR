@@ -8,14 +8,21 @@ import android.graphics.BitmapFactory;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Message;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.design.widget.BottomNavigationView;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.MenuItem;
+import android.view.View;
+import android.widget.ProgressBar;
 import android.widget.TextView;
+import android.widget.Toast;
 
+import com.toufuchew.cardocr.async.ProgressAsyncWork;
+import com.toufuchew.cardocr.async.ProgressWork;
 import com.toufuchew.cardocr.camera.CameraActivity;
 import com.toufuchew.cardocr.idcard.ocr.TessBaseApi;
 import com.toufuchew.cardocr.tools.CommonUtils;
@@ -27,6 +34,7 @@ import org.opencv.android.Utils;
 import org.opencv.core.Mat;
 
 import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.FutureTask;
 
@@ -36,9 +44,13 @@ public class MainActivity extends AppCompatActivity {
 
     private TextView mTextMessage;
 
+    private ProgressBar mProgressBar;
+
     private RequestPermissionsTool requestPermissionsTool;
 
     private String lastJPEGName;
+
+    private ScanAssistant scanAssistant;
 
     private BottomNavigationView.OnNavigationItemSelectedListener mOnNavigationItemSelectedListener
             = new BottomNavigationView.OnNavigationItemSelectedListener() {
@@ -65,10 +77,7 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-
-        mTextMessage = (TextView) findViewById(R.id.message);
-        BottomNavigationView navigation = (BottomNavigationView) findViewById(R.id.navigation);
-        navigation.setOnNavigationItemSelectedListener(mOnNavigationItemSelectedListener);
+        initView();
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             requestPermissionsTool = new RequestPermissionsAssistant();
@@ -77,6 +86,13 @@ public class MainActivity extends AppCompatActivity {
             }
         }
         prepareTessData();
+    }
+
+    private void initView() {
+        mTextMessage = (TextView) findViewById(R.id.message);
+        BottomNavigationView navigation = (BottomNavigationView) findViewById(R.id.navigation);
+        navigation.setOnNavigationItemSelectedListener(mOnNavigationItemSelectedListener);
+        mProgressBar = (ProgressBar) findViewById(R.id.ocr_progressbar);
     }
 
     @Override
@@ -119,27 +135,48 @@ public class MainActivity extends AppCompatActivity {
                 Log.e(CommonUtils.TAG, "onActivityResult warning: bitmap is null");
                 return;
             }
-            Future<String> future = workOCR(bitmap);
+            workOCR(bitmap);
         }
     }
 
-    private Future<String> workOCR(final Bitmap bitmapToOCR) {
-        FutureTask<String> task;
+    private void workOCR(final Bitmap bitmapToOCR) {
+        scanAssistant.setBitmapToScan(bitmapToOCR);
+
+        final FutureTask<String> task;
+        ProgressWork<String> progressWork;
+        // set bar visible
+        mProgressBar.setVisibility(View.VISIBLE);
         new Thread(task = new FutureTask<>(new Callable<String>() {
             @Override
             public String call() throws Exception {
-                Mat matToOCR = new Mat();
-                Utils.bitmapToMat(bitmapToOCR, matToOCR);
-                ScanAssistant scanAssistant = new ScanAssistant(matToOCR);
                 // start ocr
                 boolean success = scanAssistant.scan();
                 if (success) {
                     return scanAssistant.getIDString();
                 }
-                return null;
+                return "卡片无法识别，请重新拍摄";
             }
         })).start();
-        return task;
+
+        progressWork = new ProgressWork<String>() {
+            @Override
+            public Future<String> doInBackground() {
+                return task;
+            }
+
+            @Override
+            public int updateProgress() {
+                return scanAssistant.getProgress();
+            }
+
+            @Override
+            public void callBackResult(String result) {
+                mTextMessage.setText(result);
+            }
+        };
+        // begin move the progressbar
+        new ProgressAsyncWork<String>(progressWork, mProgressBar).work();
+
     }
 
     @Override
@@ -178,8 +215,10 @@ public class MainActivity extends AppCompatActivity {
         @Override
         protected String doInBackground(String... strings) {
             try {
+                // prepare ocr working
                 CommonUtils.prepareDirectory(CommonUtils.APP_PATH);
                 TessBaseApi.copyTessDataFiles(getAssets());
+                scanAssistant = new ScanAssistant();
             } catch (Exception e) {
                 CommonUtils.info("doTessPrepare failed, cannot init data for OCR, message: " + e.getMessage());
             }

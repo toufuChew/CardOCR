@@ -20,6 +20,7 @@ import java.util.List;
 import static com.toufuchew.cardocr.tools.AndroidDebug.log;
 
 abstract public class Recognizer implements CardOCR{
+    protected volatile int progress;
 
     private Mat originMat;
 
@@ -55,6 +56,7 @@ abstract public class Recognizer implements CardOCR{
         this.idNumbers = "";
         this.validDate = "";
         this.originMat = null;
+        this.progress = 0;
     }
 
     public void setOriginMat(Mat originMat) {
@@ -67,16 +69,21 @@ abstract public class Recognizer implements CardOCR{
             return false;
         }
         Mat gray = CVGrayTransfer.grayTransferBeforeScale(originMat, false);
+        updateProgress(10);
 
         Producer producer = new Producer(gray);
 
         Rect mainRect = findMainRect(producer);
         producer.setRectOfDigitRow(mainRect);
+        updateProgress(20);
 
         List<Mat> normalizedDigits = new ArrayList<>();
         try {
             producer.digitSeparate();
+            updateProgress(35);
+
             normalizedDigits = resizeDataSetImg(producer.getMatListOfDigit());
+            updateProgress(10);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -90,6 +97,7 @@ abstract public class Recognizer implements CardOCR{
         for (Mat m : normalizedDigits) {
             digit = instance.doOCR(m);
             idNumbers += digit;
+            updateProgress(2);
         }
         return true;
     }
@@ -135,6 +143,12 @@ abstract public class Recognizer implements CardOCR{
             return null;
         }
         return bestRect;
+    }
+
+    private void updateProgress(int val0) {
+        progress += val0;
+        if (progress > 100)
+            progress = 100;
     }
 
 }
