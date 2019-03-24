@@ -31,6 +31,7 @@ import com.toufuchew.cardocr.tools.RequestPermissionsAssistant;
 import com.toufuchew.cardocr.tools.RequestPermissionsTool;
 import com.toufuchew.cardocr.tools.ScanAssistant;
 
+import java.io.IOException;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
@@ -169,11 +170,17 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             @Override
             public String call() throws Exception {
                 // start ocr
-                boolean success = scanAssistant.scan();
-                if (success) {
-                    return scanAssistant.getIDString();
+                String error = "识别不清楚，请重新拍摄\nPlease try again later";
+                try {
+                    boolean success = scanAssistant.scan();
+                    if (success) {
+                        return scanAssistant.getIDString();
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    return error;
                 }
-                return "卡片无法识别，请重新拍摄";
+                return error;
             }
         })).start();
 

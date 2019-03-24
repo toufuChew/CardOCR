@@ -14,10 +14,21 @@ public class ProgressAsyncWork<V> extends Thread{
 
     ProgressWork progressWork;
 
+    /**
+     * offer by main thread,
+     * postHandler would submit message of the progress in this class
+     */
     Handler postHandler;
 
+    /**
+     * offer by the caller
+     * need to overwrite doInBackground() function
+     */
     Future<V> task;
 
+    /**
+     * the result returning from FutureTask
+     */
     private V result;
 
     public ProgressAsyncWork(ProgressWork progressWork, Handler postHandler) {

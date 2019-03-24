@@ -24,7 +24,9 @@ public class ScanAssistant extends Recognizer {
 
     @Override
     public String getIDString() {
-        return this.idNumbers;
+        if (idNumbers.length() > 19)
+            return idNumbers.substring(0, 19);
+        return idNumbers;
     }
 
     @Override
