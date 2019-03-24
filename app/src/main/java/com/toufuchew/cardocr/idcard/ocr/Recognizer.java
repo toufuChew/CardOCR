@@ -53,14 +53,18 @@ abstract public class Recognizer implements CardOCR{
 
     public Recognizer(){
         this.instance = new TessBaseApi();
-        this.idNumbers = "";
-        this.validDate = "";
         this.originMat = null;
-        this.progress = 0;
+        resetVal();
     }
 
     public void setOriginMat(Mat originMat) {
         this.originMat = originMat;
+    }
+
+    private void resetVal() {
+        this.idNumbers = "";
+        this.validDate = "";
+        this.progress = 0;
     }
 
     protected boolean doRecognize() {
@@ -68,6 +72,8 @@ abstract public class Recognizer implements CardOCR{
             Log.e(CommonUtils.TAG, "Recognizer error: originMat not set or is null.");
             return false;
         }
+        resetVal();
+
         Mat gray = CVGrayTransfer.grayTransferBeforeScale(originMat, false);
         updateProgress(10);
 
@@ -92,7 +98,6 @@ abstract public class Recognizer implements CardOCR{
         Core.vconcat(normalizedDigits, concat);
         AndroidDebug.writeImage(CardFonts.fontTypeToString(producer.getFontType()) + ".jpg", concat);
 
-        idNumbers = "";
         String digit;
         for (Mat m : normalizedDigits) {
             digit = instance.doOCR(m);

@@ -57,12 +57,13 @@
         <ProgressBar
             android:id="@+id/ocr_progressbar"
             android:layout_width="match_parent"
-            android:layout_height="6dp"
+            android:layout_height="4dp"
+            android:minHeight="4dp"
             style="@style/Base.Widget.AppCompat.ProgressBar.Horizontal"
             android:progressDrawable="@drawable/progressbar_mini"
             android:max="100"
             android:progress="0"
-            android:secondaryProgress="0"
+            android:secondaryProgress="10"
             android:visibility="gone"/>
         <include layout="@layout/ocr_results" />
     </RelativeLayout>

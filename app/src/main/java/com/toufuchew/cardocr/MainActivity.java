@@ -15,7 +15,6 @@ import android.support.annotation.Nullable;
 import android.support.design.widget.BottomNavigationView;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
-import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
@@ -28,19 +27,20 @@ import com.toufuchew.cardocr.async.ProgressAsyncWork;
 import com.toufuchew.cardocr.async.ProgressWork;
 import com.toufuchew.cardocr.camera.CameraActivity;
 import com.toufuchew.cardocr.idcard.ocr.TessBaseApi;
-import com.toufuchew.cardocr.tools.CommonUtils;
 import com.toufuchew.cardocr.tools.RequestPermissionsAssistant;
 import com.toufuchew.cardocr.tools.RequestPermissionsTool;
 import com.toufuchew.cardocr.tools.ScanAssistant;
 
-import org.opencv.android.Utils;
-import org.opencv.core.Mat;
-
-import java.nio.channels.AlreadyBoundException;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.FutureTask;
+
+import static com.toufuchew.cardocr.tools.CommonUtils.APP_PATH;
+import static com.toufuchew.cardocr.tools.CommonUtils.emptyDirectory;
+import static com.toufuchew.cardocr.tools.CommonUtils.TAG;
+import static com.toufuchew.cardocr.tools.CommonUtils.info;
+import static com.toufuchew.cardocr.tools.CommonUtils.prepareDirectory;
 
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener{
@@ -83,7 +83,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             requestPermissionsTool = new RequestPermissionsAssistant();
             if (hasRequestedPermissions()) {
-                CommonUtils.emptyDirectory(CommonUtils.APP_PATH);
+                emptyDirectory(APP_PATH);
             }
         }
         prepareTessData();
@@ -138,18 +138,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     private void doScan() {
         Intent cameraIntent = new Intent(MainActivity.this, CameraActivity.class);
-        lastJPEGName = CommonUtils.APP_PATH + System.currentTimeMillis() + ".jpg";
+        lastJPEGName = APP_PATH + System.currentTimeMillis() + ".jpg";
         cameraIntent.putExtra("shot", lastJPEGName);
         startActivityForResult(cameraIntent, REQUEST_IMAGE_CAPTURE);
-        /**
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                ScanAssistant scanAssistant = new ScanAssistant(null);
-                scanAssistant.scan();
-            }
-        }).start();
-         **/
     }
 
     @Override
@@ -160,7 +151,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             Bitmap bitmap = BitmapFactory.decodeFile(lastJPEGName, options);
 
             if (bitmap == null) {
-                Log.e(CommonUtils.TAG, "onActivityResult warning: bitmap is null");
+                Log.e(TAG, "onActivityResult warning: bitmap is null");
                 return;
             }
             workOCR(bitmap);
@@ -179,7 +170,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             public String call() throws Exception {
                 // start ocr
                 boolean success = scanAssistant.scan();
-                Thread.sleep(5000);
                 if (success) {
                     return scanAssistant.getIDString();
                 }
@@ -187,6 +177,17 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             }
         })).start();
 
+        final Handler postHandler = new Handler() {
+            @Override
+            public void handleMessage(Message msg) {
+                mProgressBar.setProgress(msg.arg1);
+                if (msg.arg1 >= 100 || task.isDone()) {
+                    mProgressBar.setVisibility(View.GONE);
+                    TextView mTextMessage = (TextView) findViewById(R.id.message_scan);
+                    mTextMessage.setText((String)msg.obj);
+                }
+            }
+        };
         progressWork = new ProgressWork<String>() {
             @Override
             public Future<String> doInBackground() {
@@ -198,12 +199,14 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             }
             @Override
             public void callBackResult(String result) {
-                TextView mTextMessage = (TextView) findViewById(R.id.message_scan);
-                mTextMessage.setText(result);
+                Message msg = postHandler.obtainMessage();
+                msg.obj = result;
+                postHandler.sendMessage(msg);
             }
         };
+
         // begin move the progressbar
-        new ProgressAsyncWork<String>(progressWork, mProgressBar).work();
+        new ProgressAsyncWork<String>(progressWork, postHandler).start();
     }
 
     @Override
@@ -242,7 +245,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         switch (view.getId()) {
             case R.id.btn_clear:
                 // clear cache file
-                CommonUtils.emptyDirectory(CommonUtils.APP_PATH);
+                emptyDirectory(APP_PATH);
                 Toast.makeText(this, "已清空缓存文件", Toast.LENGTH_SHORT).show();
                 break;
         }
@@ -254,11 +257,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         protected String doInBackground(String... strings) {
             try {
                 // prepare ocr working
-                CommonUtils.prepareDirectory(CommonUtils.APP_PATH);
+                prepareDirectory(APP_PATH);
                 TessBaseApi.copyTessDataFiles(getAssets());
                 scanAssistant = new ScanAssistant();
             } catch (Exception e) {
-                CommonUtils.info("doTessPrepare failed, cannot init data for OCR, message: " + e.getMessage());
+                info("doTessPrepare failed, cannot init data for OCR, message: " + e.getMessage());
             }
             return "";
         }
