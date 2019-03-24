@@ -4,16 +4,16 @@
     <item
         android:id="@+id/navigation_picture"
         android:icon="@drawable/ic_comiistupian"
-        android:title="@string/picture" />
+        android:title="@string/nav_picture" />
 
     <item
         android:id="@+id/navigation_scan"
         android:icon="@drawable/ic_scan_green"
-        android:title="@string/ocr" />
+        android:title="@string/nav_scan" />
 
     <item
         android:id="@+id/navigation_about"
         android:icon="@drawable/ic_about"
-        android:title="@string/about" />
+        android:title="@string/nav_about" />
 
 </menu>

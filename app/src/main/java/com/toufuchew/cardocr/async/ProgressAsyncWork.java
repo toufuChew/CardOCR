@@ -5,6 +5,8 @@ import android.os.Message;
 import android.view.View;
 import android.widget.ProgressBar;
 
+import com.toufuchew.cardocr.tools.CommonUtils;
+
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 
@@ -62,6 +64,7 @@ public class ProgressAsyncWork<V> {
                     }
                     msg.arg1 = progressWork.updateProgress();
                     postHandler.sendMessage(msg);
+                    CommonUtils.info("progress: " + msg.arg1);
                     try {
                         Thread.sleep(100);
                     } catch (InterruptedException e) {

@@ -1,6 +1,9 @@
 <resources>
     <string name="app_name">CardOCR</string>
-    <string name="picture">Load</string>
-    <string name="ocr">Scan</string>
-    <string name="about">About</string>
+    <string name="picture">开发中呀</string>
+    <string name="ocr">卡号区域</string>
+    <string name="about">我的工具</string>
+    <string name="nav_picture">Load</string>
+    <string name="nav_scan">scan</string>
+    <string name="nav_about">about</string>
 </resources>

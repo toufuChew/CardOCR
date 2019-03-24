@@ -15,8 +15,11 @@ import android.support.annotation.Nullable;
 import android.support.design.widget.BottomNavigationView;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -33,16 +36,23 @@ import com.toufuchew.cardocr.tools.ScanAssistant;
 import org.opencv.android.Utils;
 import org.opencv.core.Mat;
 
+import java.nio.channels.AlreadyBoundException;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.FutureTask;
 
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements View.OnClickListener{
     public final static int REQUEST_IMAGE_CAPTURE = 1;
 
-    private TextView mTextMessage;
+    private ViewGroup mLoadView;
+
+    private ViewGroup mScanView;
+
+    private ViewGroup mAboutView;
+
+    private Button mClearButton;
 
     private ProgressBar mProgressBar;
 
@@ -57,19 +67,10 @@ public class MainActivity extends AppCompatActivity {
 
         @Override
         public boolean onNavigationItemSelected(@NonNull MenuItem item) {
-            switch (item.getItemId()) {
-                case R.id.navigation_picture:
-                    mTextMessage.setText(R.string.picture);
-                    return true;
-                case R.id.navigation_scan:
-                    mTextMessage.setText(R.string.ocr);
-                    doScan();
-                    return true;
-                case R.id.navigation_about:
-                    mTextMessage.setText(R.string.about);
-                    return true;
+            if (item.getItemId() == R.id.navigation_scan) {
+                doScan();
             }
-            return false;
+            return setView(item.getItemId());
         }
     };
 
@@ -89,10 +90,37 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void initView() {
-        mTextMessage = (TextView) findViewById(R.id.message);
+        mLoadView = (ViewGroup) findViewById(R.id.page_load);
+        mScanView = (ViewGroup) findViewById(R.id.page_scan);
+        mAboutView = (ViewGroup) findViewById(R.id.page_about);
         BottomNavigationView navigation = (BottomNavigationView) findViewById(R.id.navigation);
         navigation.setOnNavigationItemSelectedListener(mOnNavigationItemSelectedListener);
+        mClearButton = (Button) findViewById(R.id.btn_clear);
+        mClearButton.setOnClickListener(this);
         mProgressBar = (ProgressBar) findViewById(R.id.ocr_progressbar);
+    }
+
+    private boolean setView(int id){
+        boolean set = true;
+        switch (id) {
+            case R.id.navigation_picture:
+                mLoadView.setVisibility(View.VISIBLE);
+                mScanView.setVisibility(View.GONE);
+                mAboutView.setVisibility(View.GONE);
+                break;
+            case R.id.navigation_scan:
+                mLoadView.setVisibility(View.GONE);
+                mScanView.setVisibility(View.VISIBLE);
+                mAboutView.setVisibility(View.GONE);
+                break;
+            case R.id.navigation_about:
+                mLoadView.setVisibility(View.GONE);
+                mScanView.setVisibility(View.GONE);
+                mAboutView.setVisibility(View.VISIBLE);
+                break;
+            default: set = false;
+        }
+        return set;
     }
 
     @Override
@@ -151,6 +179,7 @@ public class MainActivity extends AppCompatActivity {
             public String call() throws Exception {
                 // start ocr
                 boolean success = scanAssistant.scan();
+                Thread.sleep(5000);
                 if (success) {
                     return scanAssistant.getIDString();
                 }
@@ -163,20 +192,18 @@ public class MainActivity extends AppCompatActivity {
             public Future<String> doInBackground() {
                 return task;
             }
-
             @Override
             public int updateProgress() {
                 return scanAssistant.getProgress();
             }
-
             @Override
             public void callBackResult(String result) {
+                TextView mTextMessage = (TextView) findViewById(R.id.message_scan);
                 mTextMessage.setText(result);
             }
         };
         // begin move the progressbar
         new ProgressAsyncWork<String>(progressWork, mProgressBar).work();
-
     }
 
     @Override
@@ -210,6 +237,17 @@ public class MainActivity extends AppCompatActivity {
         return requestPermissionsTool.requestPermissions(this, permissions);
     }
 
+    @Override
+    public void onClick(View view) {
+        switch (view.getId()) {
+            case R.id.btn_clear:
+                // clear cache file
+                CommonUtils.emptyDirectory(CommonUtils.APP_PATH);
+                Toast.makeText(this, "已清空缓存文件", Toast.LENGTH_SHORT).show();
+                break;
+        }
+    }
+
     private class doTessPrepare extends AsyncTask<String, Void, String> {
 
         @Override
@@ -229,4 +267,5 @@ public class MainActivity extends AppCompatActivity {
         protected void onPostExecute(String s) {
         }
     }
+
 }
