@@ -22,7 +22,7 @@ public class TessBaseApi {
 
     private TessBaseAPI tessBaseAPI;
 
-    private static final String lang = "card";
+    private static final String lang = "eng";
 
     private static final String TESSDATA = "tessdata";
 

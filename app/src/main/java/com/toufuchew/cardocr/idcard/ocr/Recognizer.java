@@ -92,6 +92,7 @@ abstract public class Recognizer implements CardOCR{
 
             Mat digits = new Mat(rgbMat, rectOfDigitRow);
             List<Mat> digitList = new ArrayList<>();
+            List<Integer> axisX = new ArrayList<>();
             final float minHeight = 0.5f * m.rows();
             final float aspectRatio = 7;
             List<MatOfPoint> contours = new ArrayList<>();
@@ -100,9 +101,16 @@ abstract public class Recognizer implements CardOCR{
                 Rect digitRect = Imgproc.boundingRect(matOfPoint);
                 if (digitRect.height > minHeight) {
                     if (aspectRatio * digitRect.width > digitRect.height) {
-                        matListOfDigit.add(new Mat(m, digitRect));
+                        // to sort the contours
+                        int index;
+                        for (index = 0; index < axisX.size(); index++) {
+                            if (axisX.get(index) > digitRect.x)
+                                break;
+                        }
+                        matListOfDigit.add(index, new Mat(m, digitRect));
+                        axisX.add(index, digitRect.x);
                         // for display
-                        digitList.add(new Mat(digits, digitRect));
+                        digitList.add(index, new Mat(digits, digitRect));
                     }
                 }
             }
@@ -134,7 +142,7 @@ abstract public class Recognizer implements CardOCR{
                 start += marginRight + width;
             }
             view.put(0, 0, dst);
-            resultView = CVGrayTransfer.resizeMat(view, (int)(view.width() * resizeRatio), false);
+            resultView = CVGrayTransfer.resizeMat(view, (int)(view.width() * resizeRatio) << 1, false);
         }
     }
 

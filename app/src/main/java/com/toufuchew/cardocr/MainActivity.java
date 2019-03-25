@@ -5,6 +5,7 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Matrix;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
@@ -60,6 +61,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     private ImageView mCardNumberView;
 
+    private ImageView mCardView;
+
     private RequestPermissionsTool requestPermissionsTool;
 
     private String lastJPEGName;
@@ -103,6 +106,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         mClearButton.setOnClickListener(this);
         mProgressBar = (ProgressBar) findViewById(R.id.ocr_progressbar);
         mCardNumberView = (ImageView) findViewById(R.id.numbers_region);
+        mCardView = (ImageView) findViewById(R.id.ocr_card);
     }
 
     private boolean setView(int id){
@@ -205,7 +209,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     } else {
                         // set result view
                         try {
-                            mCardNumberView.setImageBitmap(BitmapFactory.decodeFile(scanAssistant.getResultView()));
+                            Bitmap bmp = BitmapFactory.decodeFile(scanAssistant.getResultView());
+                            mCardNumberView.setImageBitmap(bmp);
+                            bmp = BitmapFactory.decodeFile(lastJPEGName);
+                            mCardView.setImageBitmap(bmp);
                         } catch (Exception e) {
                             e.printStackTrace();
                         }
