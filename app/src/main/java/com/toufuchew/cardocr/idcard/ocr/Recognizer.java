@@ -11,8 +11,12 @@ import com.toufuchew.cardocr.tools.CommonUtils;
 
 import org.opencv.android.OpenCVLoader;
 import org.opencv.core.Core;
+import org.opencv.core.CvType;
 import org.opencv.core.Mat;
+import org.opencv.core.MatOfPoint;
 import org.opencv.core.Rect;
+import org.opencv.core.Scalar;
+import org.opencv.imgproc.Imgproc;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -22,7 +26,7 @@ import static com.toufuchew.cardocr.tools.AndroidDebug.log;
 abstract public class Recognizer implements CardOCR{
     protected volatile int progress;
 
-    private Mat originMat;
+    protected Mat originMat;
 
     private TessBaseApi instance;
 
@@ -33,6 +37,8 @@ abstract public class Recognizer implements CardOCR{
     public static final float aspectRation = 1.579f;
 
     public static final int standardWidth = 280;
+
+    public static final String RESULT_VIEW = "DigitsView.jpg";
 
     /**
      * load openCV lib only once
@@ -46,8 +52,89 @@ abstract public class Recognizer implements CardOCR{
     }
 
     static class Producer extends CVRegion {
-        public Producer(Mat graySrc) {
+        /**
+         * for display result
+         */
+        Mat rgbMat;
+
+        float resizeRatio;
+
+        private Mat resultView;
+
+        public Producer(Mat graySrc, Mat originMat) {
             super(graySrc);
+            rgbMat = CVGrayTransfer.resizeNormalizedMat(originMat, false);
+            resizeRatio = (float)originMat.width() / rgbMat.width();
+            resultView = null;
+        }
+
+        @Override
+        protected void paintDigits(List<Integer> cuttingList) {
+            super.paintDigits(cuttingList);
+            Mat digits = new Mat(rgbMat, rectOfDigitRow);
+            Rect cutter = new Rect(0, 0, 0, rectOfDigitRow.height);
+            List<Mat> digitList = new ArrayList<>();
+            for (int i = 1; i < cuttingList.size(); i++) {
+                if ((i & 0x1) == 0)
+                    continue;
+                int x1 = cuttingList.get(i - 1);
+                int x2 = cuttingList.get(i);
+                cutter.x = x1; cutter.width = x2 - x1;
+                Rect ofY = cutEdgeOfY(new Mat(getBinDigitRegion(), cutter));
+                digitList.add(new Mat(digits, new Rect(x1, ofY.y, cutter.width, ofY.height)));
+            }
+            setResultView(digitList);
+        }
+
+        @Override
+        public void setSingleDigits(Mat m) throws Exception {
+            super.setSingleDigits(m);
+
+            Mat digits = new Mat(rgbMat, rectOfDigitRow);
+            List<Mat> digitList = new ArrayList<>();
+            final float minHeight = 0.5f * m.rows();
+            final float aspectRatio = 7;
+            List<MatOfPoint> contours = new ArrayList<>();
+            Imgproc.findContours(m, contours, new Mat(), Imgproc.RETR_EXTERNAL, Imgproc.CHAIN_APPROX_SIMPLE);
+            for (MatOfPoint matOfPoint : contours) {
+                Rect digitRect = Imgproc.boundingRect(matOfPoint);
+                if (digitRect.height > minHeight) {
+                    if (aspectRatio * digitRect.width > digitRect.height) {
+                        matListOfDigit.add(new Mat(m, digitRect));
+                        // for display
+                        digitList.add(new Mat(digits, digitRect));
+                    }
+                }
+            }
+            setResultView(digitList);
+        }
+
+        private void setResultView(List<Mat> digitList) {
+            int viewHeight = 0;
+            int viewWidth = 0;
+            final int marginRight = 5;
+            for (Mat m : digitList) {
+                viewHeight = Math.max(viewHeight, m.rows());
+                viewWidth += m.cols() + marginRight;
+            }
+            Mat view = new Mat(viewHeight, viewWidth, rgbMat.type(), Scalar.all(255));
+            int start = 0;
+            int channels = rgbMat.channels();
+            byte[] dst = new byte[viewWidth * viewHeight * channels];
+            view.get(0, 0, dst);
+            for (int i = 0; i < digitList.size(); i++) {
+                Mat m = digitList.get(i);
+                int width = m.cols();
+                int height = m.rows();
+                byte[] buff = new byte[width * height * channels];
+                m.get(0, 0, buff);
+                for (int j = 0; j < height; j ++) {
+                    System.arraycopy(buff, j * width * channels, dst, (start + j * viewWidth) * channels, width * channels);
+                }
+                start += marginRight + width;
+            }
+            view.put(0, 0, dst);
+            resultView = CVGrayTransfer.resizeMat(view, (int)(view.width() * resizeRatio), false);
         }
     }
 
@@ -77,7 +164,7 @@ abstract public class Recognizer implements CardOCR{
         Mat gray = CVGrayTransfer.grayTransferBeforeScale(originMat, false);
         updateProgress(10);
 
-        Producer producer = new Producer(gray);
+        Producer producer = new Producer(gray, originMat);
 
         Rect mainRect = findMainRect(producer);
         producer.setRectOfDigitRow(mainRect);
@@ -97,6 +184,7 @@ abstract public class Recognizer implements CardOCR{
         Mat concat = new Mat();
         Core.vconcat(normalizedDigits, concat);
         AndroidDebug.writeImage(CardFonts.fontTypeToString(producer.getFontType()) + ".jpg", concat);
+        AndroidDebug.writeImage(RESULT_VIEW, producer.resultView);
 
         String digit;
         for (Mat m : normalizedDigits) {

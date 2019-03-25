@@ -12,9 +12,8 @@ public interface ProgressWork<V> {
 
     /**
      * the worker would get progress from this method
-     * @return
      */
-    int updateProgress();
+    void updateProgress();
 
     /**
      * the caller should implement this method to get the result</br>

@@ -438,18 +438,6 @@ public abstract class ImgSeparator implements RectSeparator, DigitSeparator{
         if (m.type() != CvType.CV_8UC1) {
             throw new Exception("ImgSeparator error: Mat m.type is not CvType.CV_8UC1 which is " + CvType.typeToString(m.type()) + " in function setSingleDigits(Mat m).");
         }
-        final float minHeight = 0.5f * m.rows();
-        final float aspectRatio = 7;
-        List<MatOfPoint> contours = new ArrayList<>();
-        Imgproc.findContours(m, contours, new Mat(), Imgproc.RETR_EXTERNAL, Imgproc.CHAIN_APPROX_SIMPLE);
-        for (MatOfPoint matOfPoint : contours) {
-            Rect digitRect = Imgproc.boundingRect(matOfPoint);
-            if (digitRect.height > minHeight) {
-                if (aspectRatio * digitRect.width > digitRect.height) {
-                    matListOfDigit.add(new Mat(m, digitRect));
-                }
-            }
-        }
     }
 
     abstract public void split(SplitList splitList);

@@ -13,12 +13,14 @@ import android.os.Message;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.design.widget.BottomNavigationView;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -27,13 +29,12 @@ import com.toufuchew.cardocr.async.ProgressAsyncWork;
 import com.toufuchew.cardocr.async.ProgressWork;
 import com.toufuchew.cardocr.camera.CameraActivity;
 import com.toufuchew.cardocr.idcard.ocr.TessBaseApi;
+import com.toufuchew.cardocr.tools.CommonUtils;
 import com.toufuchew.cardocr.tools.RequestPermissionsAssistant;
 import com.toufuchew.cardocr.tools.RequestPermissionsTool;
 import com.toufuchew.cardocr.tools.ScanAssistant;
 
-import java.io.IOException;
 import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.FutureTask;
 
@@ -56,6 +57,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private Button mClearButton;
 
     private ProgressBar mProgressBar;
+
+    private ImageView mCardNumberView;
 
     private RequestPermissionsTool requestPermissionsTool;
 
@@ -99,6 +102,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         mClearButton = (Button) findViewById(R.id.btn_clear);
         mClearButton.setOnClickListener(this);
         mProgressBar = (ProgressBar) findViewById(R.id.ocr_progressbar);
+        mCardNumberView = (ImageView) findViewById(R.id.numbers_region);
     }
 
     private boolean setView(int id){
@@ -164,13 +168,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         final FutureTask<String> task;
         ProgressWork<String> progressWork;
+        final String error = "识别不清，请重新拍摄\nPlease try again later";
         // set bar visible
         mProgressBar.setVisibility(View.VISIBLE);
         new Thread(task = new FutureTask<>(new Callable<String>() {
             @Override
-            public String call() throws Exception {
+            public String call() {
                 // start ocr
-                String error = "识别不清楚，请重新拍摄\nPlease try again later";
                 try {
                     boolean success = scanAssistant.scan();
                     if (success) {
@@ -188,10 +192,24 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             @Override
             public void handleMessage(Message msg) {
                 mProgressBar.setProgress(msg.arg1);
-                if (msg.arg1 >= 100 || task.isDone()) {
+                if (msg.arg1 >= 100) {
                     mProgressBar.setVisibility(View.GONE);
+                }
+                if (task.isDone()) {
+                    mProgressBar.setVisibility(View.GONE);
+                    // set result msg
                     TextView mTextMessage = (TextView) findViewById(R.id.message_scan);
                     mTextMessage.setText((String)msg.obj);
+                    if (((String)msg.obj).compareTo(error) == 0) {
+                        mCardNumberView.setImageDrawable(ContextCompat.getDrawable(MainActivity.this, R.drawable.ic_comiistupian));
+                    } else {
+                        // set result view
+                        try {
+                            mCardNumberView.setImageBitmap(BitmapFactory.decodeFile(scanAssistant.getResultView()));
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                    }
                 }
             }
         };
@@ -201,19 +219,23 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 return task;
             }
             @Override
-            public int updateProgress() {
-                return scanAssistant.getProgress();
+            public void updateProgress() {
+                Message msg = postHandler.obtainMessage();
+                msg.arg1 = scanAssistant.getProgress();
+                postHandler.sendMessage(msg);
+                info("progress: " + msg.arg1);
             }
             @Override
             public void callBackResult(String result) {
                 Message msg = postHandler.obtainMessage();
+                msg.arg1 = scanAssistant.getProgress();
                 msg.obj = result;
                 postHandler.sendMessage(msg);
             }
         };
 
         // begin move the progressbar
-        new ProgressAsyncWork<String>(progressWork, postHandler).start();
+        new ProgressAsyncWork<String>(progressWork).start();
     }
 
     @Override

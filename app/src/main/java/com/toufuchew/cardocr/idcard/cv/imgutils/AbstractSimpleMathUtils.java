@@ -76,4 +76,13 @@ public abstract class AbstractSimpleMathUtils implements SimpleMath {
     public double[] kernelDensity(double[] flow) {
         return new double[0];
     }
+
+    public int safeLongToInt(long l) {
+        if (l < Integer.MIN_VALUE || l > Integer.MAX_VALUE) {
+            throw new IllegalArgumentException
+                    (l + " cannot be cast to int without changing its value.");
+        }
+        return (int) l;
+    }
+
 }

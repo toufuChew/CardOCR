@@ -65,6 +65,11 @@ public class CVGrayTransfer {
         return new CVGrayTransfer().rgbToGray(resize);
     }
 
+    public static Mat resizeNormalizedMat(Mat m, boolean pyr) {
+        final int mw = m.width() > 1024 ? 1024 : m.width();
+        return resizeMat(m, mw, pyr);
+    }
+
     public static Mat resizeMat(Mat m, int resizeWidth, boolean pyr) {
         Mat resize;
         resize = pyr ? grayUtils.normalizeSize(m) :

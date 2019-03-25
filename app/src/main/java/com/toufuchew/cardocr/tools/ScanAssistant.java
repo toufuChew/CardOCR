@@ -34,6 +34,10 @@ public class ScanAssistant extends Recognizer {
         return this.validDate;
     }
 
+    public String getResultView() {
+        return CommonUtils.APP_PATH + RESULT_VIEW;
+    }
+
     public boolean scan() {
         return doRecognize();
     }

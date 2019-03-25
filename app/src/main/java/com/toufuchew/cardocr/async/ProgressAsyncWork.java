@@ -15,12 +15,6 @@ public class ProgressAsyncWork<V> extends Thread{
     ProgressWork progressWork;
 
     /**
-     * offer by main thread,
-     * postHandler would submit message of the progress in this class
-     */
-    Handler postHandler;
-
-    /**
      * offer by the caller
      * need to overwrite doInBackground() function
      */
@@ -31,9 +25,8 @@ public class ProgressAsyncWork<V> extends Thread{
      */
     private V result;
 
-    public ProgressAsyncWork(ProgressWork progressWork, Handler postHandler) {
+    public ProgressAsyncWork(ProgressWork progressWork) {
         this.progressWork = progressWork;
-        this.postHandler = postHandler;
     }
 
     public V getResult() {
@@ -49,7 +42,6 @@ public class ProgressAsyncWork<V> extends Thread{
 
     private void work() {
         do {
-            Message msg = postHandler.obtainMessage();
             if (task.isDone()) {
                 // set result
                 try {
@@ -62,9 +54,7 @@ public class ProgressAsyncWork<V> extends Thread{
                     break;
                 }
             }
-            msg.arg1 = progressWork.updateProgress();
-            postHandler.sendMessage(msg);
-            CommonUtils.info("progress: " + msg.arg1);
+            progressWork.updateProgress();
             try {
                 Thread.sleep(100);
             } catch (InterruptedException e) {

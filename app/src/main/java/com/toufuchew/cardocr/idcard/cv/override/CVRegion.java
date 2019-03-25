@@ -131,7 +131,7 @@ public class CVRegion extends ImgSeparator {
     @Override
     public void setSingleDigits() throws Exception {
         if (fontType == CardFonts.FontType.BLACK_FONT) {
-            super.setSingleDigits(binDigitRegion);
+            setSingleDigits(binDigitRegion);
             return;
         }
         int []x = calcHistOfXY(binDigitRegion, true);
