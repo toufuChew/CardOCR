@@ -7,8 +7,8 @@
 ### 不足
 <p>一个是上面所说的凹凸卡号字符识别准确率太低，原因是自己训练的 Tesseract traineddata 数据量不足。</p>
 ### 如何改进
-<p>文本区域定位，提高卡号定位准确率，需要对代码中过滤器 RectFilter 的参数做微调</p>
-<p>针对凹凸字体提供足够多的数据样本进行训练，如何训练 Tesseract? 详细可参考<link>http://xiaosheng.me/2015/12/18/article11/</link></p>
+文本区域定位，提高卡号定位准确率，需要对代码中过滤器 RectFilter 的参数做微调.
+针对凹凸字体提供足够多的数据样本进行训练，如何训练 Tesseract? 详细可参考 <link>http://xiaosheng.me/2015/12/18/article11/</link>
 ### app 扫描效果
 <div align="center">
     <div style="display: inline-box">
@@ -17,14 +17,14 @@
     </div>
     <div style="display: inline-box">
         <img src="AppPicture/result_view.png" height="512px">
-        <p>识别效果[印刷类]</p>
+        <p>实景拍摄[印刷类]</p>
     </div>
     <div style="display: inline-box">
             <img src="AppPicture/result_view_LightFont.png" height="512px">
-            <p>识别效果[凹凸类]01</p>
+            <p>实景拍摄[凹凸类]</p>
     </div>
     <div style="display: inline-box">
                 <img src="AppPicture/result_view_LightFont02.png" height="512px">
-                <p>识别效果[凹凸类]02</p>
+                <p>屏幕拍摄[凹凸类]</p>
         </div>
 </div>
