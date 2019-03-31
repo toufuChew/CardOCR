@@ -67,9 +67,14 @@ public class CVFontType {
         if (whiteBits < cols * rows * ratio)
             return cardFonts;
         // too many small debris, it will affect separating character later
-        if (contours.size() > fontSegments)
+        final int checkTimes = 5;
+        // too many small debris, it will affect separating character later
+        if (contours.size() > fontSegments ||
+                (contours.size() > 1 && contours.size() <= checkTimes << 1)) {
             return cardFonts;
+        }
         if (maxArea * ratio > minArea || maxArea == minArea) { // almost white (> 80%) or contains big white area
+            final int oldSize = contours.size();
             Mat not = new Mat();
             Core.bitwise_not(bin, not);
             contours = new ArrayList<>();
@@ -81,11 +86,11 @@ public class CVFontType {
                 }
             });
             whiteBits = cols * rows - whiteBits;
-            cardFonts.setFonts(not.clone());
+            if (oldSize < contours.size())
+                cardFonts.setFonts(not);
         }
-        final int checkTimes = 5;
         // check whether contains large amounts of debris
-        if (contours.size() <= checkTimes * 2 || contours.size() > fontSegments) {
+        if (contours.size() > fontSegments) {
             return cardFonts;
         }
         maxArea = Imgproc.contourArea(contours.get(checkTimes));

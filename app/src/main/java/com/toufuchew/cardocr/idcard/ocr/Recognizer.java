@@ -217,6 +217,7 @@ abstract public class Recognizer implements CardOCR{
         Rect bestRect = new Rect();
         final float fullWidth = gray.cols() - Producer.border * 2;
         boolean chose;
+        Mat writeDebug = null;
         for ( ; ; findBright = true) {
             Mat dilate = CVDilate.fastDilate(gray, findBright);
             Rect idRect = null;
@@ -235,6 +236,7 @@ abstract public class Recognizer implements CardOCR{
                 }
                 if (chose) {
                     bestRect = idRect;
+                    writeDebug = dilate;
                 }
             }
             if (findBright) break;
@@ -242,6 +244,11 @@ abstract public class Recognizer implements CardOCR{
         if (bestRect.width == 0) {
             System.err.println("OCR Failed.");
             return null;
+        }
+        try {
+            AndroidDebug.writeImage("Preprocess.jpg", writeDebug);
+        } catch (Exception e) {
+            e.printStackTrace();
         }
         return bestRect;
     }

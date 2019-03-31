@@ -350,14 +350,15 @@ public class CVRegion extends ImgSeparator {
             int maxScore = 0;
             for (int t = 0; t < detectDepth; t++) {
                 Rect br = Imgproc.boundingRect(contours.get(t));
+                AndroidDebug.writeImage("br" + t + ".jpg", new Mat(src, br));
                 List<Rect> separates = this.rectSeparate(src, br);
                 for (Rect r : separates) {
                     Mat roi = drawRectRegion(src, r);
-                    Rect maxRect = filter.findMaxRect(roi);
-                    int score = filter.IDRegionSimilarity(maxRect, src.rows(), src.cols());
+                    filter.findMaxRect(roi, r);
+                    int score = filter.IDRegionSimilarity(roi, r, src.rows(), src.cols());
                     if (score > maxScore) {
                         maxScore = score;
-                        rect = maxRect;
+                        rect = r;
                     }
                 }
             }
@@ -483,7 +484,7 @@ public class CVRegion extends ImgSeparator {
         }
         // right edge
         w = 0;
-        for (int i = cols - 1; i > (cols >> 1); i--) {
+        for (int i = cols - 1; i > cols - (cols >> 3); i--) {
             int h = 0;
             for (int j = 0; j < rows; j++) {
                 int at = j * cols + i;

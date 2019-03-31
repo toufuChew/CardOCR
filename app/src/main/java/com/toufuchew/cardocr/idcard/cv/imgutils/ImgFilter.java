@@ -1,6 +1,7 @@
 package com.toufuchew.cardocr.idcard.cv.imgutils;
 
 
+import org.opencv.core.Core;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfPoint;
 import org.opencv.core.Rect;
@@ -29,29 +30,64 @@ public class ImgFilter implements RectFilter {
     }
 
     @Override
-    public int IDRegionSimilarity(Rect roi, int rows, int cols) {
+    public int IDRegionSimilarity(Mat m, Rect r, int rows, int cols) {
         int origin = 0;
-        if (roi.y < this.MIN_HEIGHT_RATE * rows)
+        if (r.y < this.MIN_HEIGHT_RATE * rows)
             return origin;
-        if (roi.y > (1 - this.MIN_HEIGHT_RATE) * rows)
+        if (r.y > (1 - this.MIN_HEIGHT_RATE) * rows)
             return origin;
-        origin += roi.width * this.WIDTH_SCORE + roi.height * this.HEIGHT_SCORE;
-        origin += roi.y * this.Y_POS_SCORE;
+        int y_score = 9;
+        int bottom = r.y + r.height;
+        if (r.y > rows * 0.8)
+            y_score = 5;
+        if (bottom > rows * 0.9)
+            y_score = 3;
+        origin += r.y * y_score;
+        float avgSimilarity = 0;
+        List<MatOfPoint> cnt = new ArrayList<>();
+        Imgproc.findContours(m, cnt, new Mat(), Imgproc.RETR_EXTERNAL, Imgproc.CHAIN_APPROX_SIMPLE);
+        for (MatOfPoint contour : cnt) {
+            Rect rect = Imgproc.boundingRect(contour);
+            if (rect.height < MIN_AREA)
+                continue;
+            double cntArea = Imgproc.contourArea(contour);
+            int frameSize = rect.width * r.height;
+            avgSimilarity += (cntArea / frameSize);
+            origin += cntArea;
+        }
+        avgSimilarity /= cnt.size();
+        origin *= avgSimilarity;
         return origin;
     }
 
     @Override
-    public Rect findMaxRect(Mat m) {
+    public void findMaxRect(Mat m, Rect r) {
+        int mainLeft = (int)(r.width * 0.1f) + r.x;
+        int mainRight = (int)(r.width * 0.9f) + r.x;
+        int mainCenter = (r.width >> 1) + r.x;
+        int minWidth = (int)(m.cols() * MIN_WIDTH_RATE);
         List<MatOfPoint> contours = new ArrayList<>();
         Imgproc.findContours(m, contours, new Mat(), Imgproc.RETR_EXTERNAL, Imgproc.CHAIN_APPROX_SIMPLE);
-        Rect out = new Rect();
         for (MatOfPoint contour : contours) {
             Rect rect = Imgproc.boundingRect(contour);
-            if (rect.width * rect.height > out.width * out.height) {
-                out = rect;
+            int center = rect.x + rect.width / 2;
+            if (center < mainLeft || center > mainRight || rect.height < MIN_AREA)
+                continue;
+            // rect frame 【 】
+            int frameSize = rect.width * r.height;
+            // white region size in frame 【==】
+            int frameArea = Core.countNonZero(new Mat(m, new Rect(rect.x, r.y, rect.width, r.height)));
+            if (frameArea < frameSize * FULL_AREA_RATIO ||
+                    (rect.height < r.height * FRAME_H_RATIO && rect.width > minWidth)) {
+                if (center < mainCenter) {
+                    r.width -= (center - r.x);
+                    r.x = center;
+                } else {
+                    r.width = center - r.x;
+                }
+                break;
             }
         }
-        return out;
     }
 
 }
