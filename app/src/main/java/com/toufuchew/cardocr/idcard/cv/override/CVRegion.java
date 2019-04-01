@@ -137,6 +137,8 @@ public class CVRegion extends ImgSeparator {
         int []x = calcHistOfXY(binDigitRegion, true);
         int cur = 0;
         List<Integer> cutting = new LinkedList<>();
+        if (x[cur] > 0)
+            cutting.add(cur);
         while (true) {
             int next = findNext(x, cur);
             if (next >= x.length)

@@ -63,7 +63,6 @@ public class CVDilate {
         Imgproc.morphologyEx(gray0, dst, Imgproc.MORPH_TOPHAT, Imgproc.getStructuringElement(Imgproc.MORPH_RECT, new Size(9, 3)));
         Imgproc.GaussianBlur(dst, dst, new Size(13, 13), 0);
         Imgproc.Canny(dst, dst, 300, 600, 5, true);
-        Imgproc.morphologyEx(dst, dst, Imgproc.MORPH_CLOSE, Imgproc.getStructuringElement(Imgproc.MORPH_RECT, new Size(3, 3)));
         Imgproc.dilate(dst, dst, new Mat(), new Point(-1, -1), 5);
         Size heavy = new Size(35, 5);
         // apply a second dilate operation to the binary image
@@ -77,8 +76,6 @@ public class CVDilate {
         Imgproc.morphologyEx(gray0, dst, Imgproc.MORPH_BLACKHAT, Imgproc.getStructuringElement(Imgproc.MORPH_RECT, new Size(18, 10)));
         Imgproc.GaussianBlur(dst, dst, new Size(13, 13), 0);
         Imgproc.Canny(dst, dst, 300, 600, 5, true);
-        // apply Otsu's thresholding method to binarize the image
-        Imgproc.threshold(dst, dst, 0, 255, THRESH_BINARY | Imgproc.THRESH_OTSU);
         Size heavy = new Size(35, 3);
         Imgproc.dilate(dst, dst, Imgproc.getStructuringElement(Imgproc.MORPH_RECT, heavy));
         return dst;

@@ -14,8 +14,8 @@
                         <option name="values">
                           <map>
                             <entry key="assetSourceType" value="FILE" />
-                            <entry key="outputName" value="ic_clear" />
-                            <entry key="sourceFile" value="$USER_HOME$/Downloads/ic_clear.svg" />
+                            <entry key="outputName" value="ic_ocr" />
+                            <entry key="sourceFile" value="$USER_HOME$/Downloads/ocr (1).svg" />
                           </map>
                         </option>
                       </PersistentState>
