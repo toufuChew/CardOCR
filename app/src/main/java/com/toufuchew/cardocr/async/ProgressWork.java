@@ -19,6 +19,7 @@ public interface ProgressWork<V> {
      * the caller should implement this method to get the result</br>
      * showing on the ui view
      * @param result
+     * @param timeInterval time consuming of the work
      */
-    void callBackResult(V result);
+    void callBackResult(V result, long timeInterval);
 }

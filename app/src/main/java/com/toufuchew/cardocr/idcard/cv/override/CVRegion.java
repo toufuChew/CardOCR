@@ -362,6 +362,8 @@ public class CVRegion extends ImgSeparator {
                         maxScore = score;
                         rect = r;
                     }
+                    // this method do nothing
+                    drawROI(r, false);
                 }
             }
         }
@@ -550,6 +552,12 @@ public class CVRegion extends ImgSeparator {
         }
         return new Rect(0, upperY, cols, lowerY - upperY);
     }
+
+    @Override
+    /**
+     * reversed for inherited class
+     */
+    public void drawROI(Rect rect, boolean isAims) {}
 
     @Override
     protected void paintDigits(List<Integer> cuttingList) {

@@ -41,13 +41,14 @@ public class ProgressAsyncWork<V> extends Thread{
     }
 
     private void work() {
+        long timerStart = System.currentTimeMillis();
         do {
             if (task.isDone()) {
                 // set result
                 try {
                     result = task.get();
                     // callback when the work done
-                    progressWork.callBackResult(result);
+                    progressWork.callBackResult(result, System.currentTimeMillis() - timerStart);
                 } catch (Exception e) {
                     e.printStackTrace();
                 } finally {

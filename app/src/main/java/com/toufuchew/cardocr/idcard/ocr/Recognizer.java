@@ -14,6 +14,7 @@ import org.opencv.core.Core;
 import org.opencv.core.CvType;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfPoint;
+import org.opencv.core.Point;
 import org.opencv.core.Rect;
 import org.opencv.core.Scalar;
 import org.opencv.imgproc.Imgproc;
@@ -40,6 +41,7 @@ abstract public class Recognizer implements CardOCR{
 
     public static final String RESULT_VIEW = "DigitsView.jpg";
 
+    public static final String MAIN_VIEW = "ROI.jpg";
     /**
      * load openCV lib only once
      */
@@ -56,6 +58,10 @@ abstract public class Recognizer implements CardOCR{
          * for display result
          */
         Mat rgbMat;
+        /**
+         * clone from rgbMat
+         */
+        Mat roiMat;
 
         float resizeRatio;
 
@@ -64,8 +70,17 @@ abstract public class Recognizer implements CardOCR{
         public Producer(Mat graySrc, Mat originMat) {
             super(graySrc);
             rgbMat = CVGrayTransfer.resizeNormalizedMat(originMat, false);
+            roiMat = rgbMat.clone();
             resizeRatio = (float)originMat.width() / rgbMat.width();
             resultView = null;
+        }
+
+        @Override
+        public void drawROI(Rect r, boolean isAims) {
+            Scalar scalar = new Scalar(0, 0, 255);
+            if (isAims) scalar = new Scalar(0, 255, 0);
+            Imgproc.rectangle(roiMat, new Point(r.x, r.y),
+                    new Point(r.x + r.width, r.y + r.height), scalar, 2);
         }
 
         @Override
@@ -175,6 +190,8 @@ abstract public class Recognizer implements CardOCR{
         Producer producer = new Producer(gray, originMat);
 
         Rect mainRect = findMainRect(producer);
+        AndroidDebug.writeImage(MAIN_VIEW, producer.roiMat);
+
         producer.setRectOfDigitRow(mainRect);
         updateProgress(20);
 
@@ -245,6 +262,8 @@ abstract public class Recognizer implements CardOCR{
             System.err.println("OCR Failed.");
             return null;
         }
+        // draw the last result region
+        producer.drawROI(bestRect, true);
         try {
             AndroidDebug.writeImage("Preprocess.jpg", writeDebug);
         } catch (Exception e) {

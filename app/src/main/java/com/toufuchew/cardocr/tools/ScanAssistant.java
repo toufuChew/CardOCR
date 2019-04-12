@@ -38,6 +38,10 @@ public class ScanAssistant extends Recognizer {
         return CommonUtils.APP_PATH + RESULT_VIEW;
     }
 
+    public String getMainView() {
+        return CommonUtils.APP_PATH + MAIN_VIEW;
+    }
+
     public boolean scan() {
         return doRecognize();
     }

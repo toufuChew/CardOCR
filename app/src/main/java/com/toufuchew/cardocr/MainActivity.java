@@ -186,7 +186,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     }
                 } catch (Exception e) {
                     e.printStackTrace();
-                    return error;
                 }
                 return error;
             }
@@ -207,15 +206,22 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     if (((String)msg.obj).compareTo(error) == 0) {
                         mCardNumberView.setImageDrawable(ContextCompat.getDrawable(MainActivity.this, R.drawable.ic_comiistupian));
                     } else {
+                        Toast.makeText(MainActivity.this,
+                                "耗时" + (msg.arg2 / 1000) + "s", Toast.LENGTH_SHORT).show();
                         // set result view
                         try {
                             Bitmap bmp = BitmapFactory.decodeFile(scanAssistant.getResultView());
                             mCardNumberView.setImageBitmap(bmp);
-                            bmp = BitmapFactory.decodeFile(lastJPEGName);
-                            mCardView.setImageBitmap(bmp);
                         } catch (Exception e) {
                             e.printStackTrace();
                         }
+                    }
+                    // echo roi view
+                    try {
+                        Bitmap bmp = BitmapFactory.decodeFile(scanAssistant.getMainView());
+                        mCardView.setImageBitmap(bmp);
+                    } catch (Exception e) {
+                        e.printStackTrace();
                     }
                 }
             }
@@ -233,9 +239,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 info("progress: " + msg.arg1);
             }
             @Override
-            public void callBackResult(String result) {
+            public void callBackResult(String result, long timeInterval) {
                 Message msg = postHandler.obtainMessage();
                 msg.arg1 = scanAssistant.getProgress();
+                msg.arg2 = (int)(timeInterval);
                 msg.obj = result;
                 postHandler.sendMessage(msg);
             }
