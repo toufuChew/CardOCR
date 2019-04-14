@@ -42,6 +42,10 @@ abstract public class Recognizer implements CardOCR{
     public static final String RESULT_VIEW = "DigitsView.jpg";
 
     public static final String MAIN_VIEW = "ROI.jpg";
+
+    public static final String DEBUG_REGION_VIEW = "Pre-process.jpg";
+
+    public static final String DEBUG_FONT_VIEW = "binDigits.jpg";
     /**
      * load openCV lib only once
      */
@@ -76,13 +80,21 @@ abstract public class Recognizer implements CardOCR{
         }
 
         @Override
-        public void drawROI(Rect r, boolean isAims) {
+        public void drawROI(Rect r, boolean isAims, String msg) {
             Scalar scalar = new Scalar(0, 0, 255);
             if (isAims) scalar = new Scalar(0, 255, 0);
             Imgproc.rectangle(roiMat, new Point(r.x, r.y),
                     new Point(r.x + r.width, r.y + r.height), scalar, 2);
+            if (msg != null) {
+                Imgproc.putText(roiMat, msg,
+                        new Point(r.x, r.y + r.height), Core.FONT_HERSHEY_SIMPLEX, 1, scalar, 2);
+            }
         }
 
+        /**
+         * for the light-font type
+         * @param cuttingList
+         */
         @Override
         protected void paintDigits(List<Integer> cuttingList) {
             super.paintDigits(cuttingList);
@@ -101,10 +113,16 @@ abstract public class Recognizer implements CardOCR{
             setResultView(digitList);
         }
 
+        /**
+         * for the black-font type
+         * @param m binary image of id region
+         * @throws Exception
+         */
         @Override
         public void setSingleDigits(Mat m) throws Exception {
             super.setSingleDigits(m);
-
+            AndroidDebug.writeImage(DEBUG_FONT_VIEW, m);
+/**
             Mat digits = new Mat(rgbMat, rectOfDigitRow);
             List<Mat> digitList = new ArrayList<>();
             List<Integer> axisX = new ArrayList<>();
@@ -130,6 +148,9 @@ abstract public class Recognizer implements CardOCR{
                 }
             }
             setResultView(digitList);
+ **/
+            matListOfDigit.add(new Mat(grayMat, getRectOfDigitRow()).clone());
+            resultView = matListOfDigit.get(0);
         }
 
         private void setResultView(List<Mat> digitList) {
@@ -199,8 +220,10 @@ abstract public class Recognizer implements CardOCR{
         try {
             producer.digitSeparate();
             updateProgress(35);
-
-            normalizedDigits = resizeDataSetImg(producer.getMatListOfDigit());
+            normalizedDigits = producer.getMatListOfDigit();
+            if (producer.getFontType() == CardFonts.FontType.LIGHT_FONT) {
+                normalizedDigits = resizeDataSetImg(normalizedDigits);
+            }
             updateProgress(10);
         } catch (Exception e) {
             e.printStackTrace();
@@ -208,10 +231,9 @@ abstract public class Recognizer implements CardOCR{
 
         Mat concat = new Mat();
         Core.vconcat(normalizedDigits, concat);
-        AndroidDebug.writeImage(CardFonts.fontTypeToString(producer.getFontType()) + ".jpg", concat);
+        AndroidDebug.writeImage("concat." + CardFonts.fontTypeToString(producer.getFontType()) + ".jpg", concat);
         AndroidDebug.writeImage(RESULT_VIEW, producer.resultView);
-
-        String digit;
+        String digit = "";
         for (Mat m : normalizedDigits) {
             digit = instance.doOCR(m);
             idNumbers += digit;
@@ -263,9 +285,9 @@ abstract public class Recognizer implements CardOCR{
             return null;
         }
         // draw the last result region
-        producer.drawROI(bestRect, true);
+        producer.drawROI(bestRect, true, null);
         try {
-            AndroidDebug.writeImage("Preprocess.jpg", writeDebug);
+            AndroidDebug.writeImage(DEBUG_REGION_VIEW, writeDebug);
         } catch (Exception e) {
             e.printStackTrace();
         }

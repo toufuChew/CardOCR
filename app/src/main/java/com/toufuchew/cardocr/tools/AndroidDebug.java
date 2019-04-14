@@ -25,6 +25,11 @@ public final class AndroidDebug {
         imwrite(appPath + name, origin);
     }
 
+    /**
+     * load image resource from ``APP_PATH`` external storage
+     * @param name
+     * @return
+     */
     public static Mat readImage(String name) {
         BitmapFactory.Options options = new BitmapFactory.Options();
 		Bitmap bitmap = BitmapFactory.decodeFile(APP_PATH + name, options);

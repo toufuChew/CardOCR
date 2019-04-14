@@ -36,12 +36,12 @@ public class ImgFilter implements RectFilter {
             return origin;
         if (r.y > (1 - this.MIN_HEIGHT_RATE) * rows)
             return origin;
-        int y_score = 9;
+        int y_score = 90;
         int bottom = r.y + r.height;
-        if (r.y > rows * 0.8)
-            y_score = 5;
-        if (bottom > rows * 0.9)
-            y_score = 3;
+        if (r.y > rows * 0.8 || r.y < rows * 0.2)
+            y_score = 50;
+        if (bottom > rows * 0.9 || r.y < rows * 0.1)
+            y_score = 30;
         origin += r.y * y_score;
         float avgSimilarity = 0;
         List<MatOfPoint> cnt = new ArrayList<>();

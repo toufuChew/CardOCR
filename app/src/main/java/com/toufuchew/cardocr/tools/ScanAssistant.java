@@ -19,6 +19,7 @@ public class ScanAssistant extends Recognizer {
     public void setBitmapToScan(Bitmap bitmapToScan) {
         Mat matToOCR = new Mat();
         Utils.bitmapToMat(bitmapToScan, matToOCR);
+//        matToOCR = AndroidDebug.readImage("tessdata/again.jpg");
         setOriginMat(matToOCR);
     }
 
@@ -40,6 +41,14 @@ public class ScanAssistant extends Recognizer {
 
     public String getMainView() {
         return CommonUtils.APP_PATH + MAIN_VIEW;
+    }
+
+    public String getDebugRegionView() {
+        return CommonUtils.APP_PATH + DEBUG_REGION_VIEW;
+    }
+
+    public String getDebugFontView() {
+        return CommonUtils.APP_PATH + DEBUG_FONT_VIEW;
     }
 
     public boolean scan() {

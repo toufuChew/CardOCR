@@ -273,6 +273,31 @@ public class CVRegion extends ImgSeparator {
             }
             return null;
         }
+
+        public void combineRect(List<Rect> combinedList, Rect input) {
+            int v;
+            for (v = 0; v < combinedList.size(); v++) {
+                Rect cell = combinedList.get(v);
+                int bb = input.y + input.height;
+                if (bb >= cell.y) {
+                    int bc = cell.y + cell.height;
+                    if (bb <= bc) {
+                        cell.y = Math.min(input.y, cell.y);
+                        // update height
+                        cell.height = bc - cell.y;
+                        break;
+                    }
+                    if (input.y <= bc) {
+                        cell.y = Math.min(input.y, cell.y);
+                        // update height
+                        cell.height = bb - cell.y;
+                        break;
+                    }
+                }
+            }
+            if (v == combinedList.size())
+                combinedList.add(input);
+        }
     }
 
     /**
@@ -350,20 +375,24 @@ public class CVRegion extends ImgSeparator {
             });
             final int detectDepth = Math.min(5, contours.size());
             int maxScore = 0;
+            List<Rect> brs = new ArrayList<>();
             for (int t = 0; t < detectDepth; t++) {
                 Rect br = Imgproc.boundingRect(contours.get(t));
-                AndroidDebug.writeImage("br" + t + ".jpg", new Mat(src, br));
+                filter.combineRect(brs, br);
+            }
+            // detect region
+            for (Rect br : brs) {
                 List<Rect> separates = this.rectSeparate(src, br);
                 for (Rect r : separates) {
                     Mat roi = drawRectRegion(src, r);
+//                    Debug.imshow("roi", new Mat(src, r));
                     filter.findMaxRect(roi, r);
                     int score = filter.IDRegionSimilarity(roi, r, src.rows(), src.cols());
                     if (score > maxScore) {
                         maxScore = score;
                         rect = r;
                     }
-                    // this method do nothing
-                    drawROI(r, false);
+                    drawROI(r, false, score + "");
                 }
             }
         }
@@ -436,7 +465,6 @@ public class CVRegion extends ImgSeparator {
         if (type == CardFonts.FontType.BLACK_FONT || type == CardFonts.FontType.UNKNOWN) {
             binDigits = fonts.getFonts();
         }
-        AndroidDebug.writeImage("binDigits.jpg", binDigits);
         this.binDigitRegion = binDigits;
         this.fontType = type;
         setSingleDigits();
@@ -557,7 +585,7 @@ public class CVRegion extends ImgSeparator {
     /**
      * reversed for inherited class
      */
-    public void drawROI(Rect rect, boolean isAims) {}
+    public void drawROI(Rect rect, boolean isAims, String msg) {}
 
     @Override
     protected void paintDigits(List<Integer> cuttingList) {

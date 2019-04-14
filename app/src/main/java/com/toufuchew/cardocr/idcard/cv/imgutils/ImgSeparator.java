@@ -486,7 +486,7 @@ public abstract class ImgSeparator implements RectSeparator, DigitSeparator{
 
     abstract protected Rect cutEdgeOfY(Mat binSingleDigit);
 
-    abstract public void drawROI(Rect rect, boolean isAims);
+    abstract public void drawROI(Rect rect, boolean isAims, String msg);
 
     @Override
     public void digitSeparate() throws Exception {

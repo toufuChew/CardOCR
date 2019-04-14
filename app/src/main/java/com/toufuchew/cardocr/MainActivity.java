@@ -63,18 +63,25 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     private ImageView mCardView;
 
+    private ImageView mDebugRegion;
+
+    private ImageView mDebugFont;
+
     private RequestPermissionsTool requestPermissionsTool;
 
     private String lastJPEGName;
 
     private ScanAssistant scanAssistant;
 
+    // for double click on scan button
+    private int lastNavigationItem;
+
     private BottomNavigationView.OnNavigationItemSelectedListener mOnNavigationItemSelectedListener
             = new BottomNavigationView.OnNavigationItemSelectedListener() {
 
         @Override
         public boolean onNavigationItemSelected(@NonNull MenuItem item) {
-            if (item.getItemId() == R.id.navigation_scan) {
+            if (item.getItemId() == R.id.navigation_scan && lastNavigationItem == item.getItemId()) {
                 doScan();
             }
             return setView(item.getItemId());
@@ -107,6 +114,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         mProgressBar = (ProgressBar) findViewById(R.id.ocr_progressbar);
         mCardNumberView = (ImageView) findViewById(R.id.numbers_region);
         mCardView = (ImageView) findViewById(R.id.ocr_card);
+        mDebugRegion = (ImageView) findViewById(R.id.debug_region);
+        mDebugFont = (ImageView) findViewById(R.id.debug_font);
+        lastNavigationItem = R.id.navigation_scan;
     }
 
     private boolean setView(int id){
@@ -116,6 +126,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 mLoadView.setVisibility(View.VISIBLE);
                 mScanView.setVisibility(View.GONE);
                 mAboutView.setVisibility(View.GONE);
+                try {
+                    mDebugRegion.setImageBitmap(BitmapFactory.decodeFile(scanAssistant.getDebugRegionView()));
+                    mDebugFont.setImageBitmap(BitmapFactory.decodeFile(scanAssistant.getDebugFontView()));
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
                 break;
             case R.id.navigation_scan:
                 mLoadView.setVisibility(View.GONE);
@@ -129,6 +145,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 break;
             default: set = false;
         }
+        lastNavigationItem = id;
         return set;
     }
 
@@ -199,6 +216,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     mProgressBar.setVisibility(View.GONE);
                 }
                 if (task.isDone()) {
+                    Bitmap bmp;
                     mProgressBar.setVisibility(View.GONE);
                     // set result msg
                     TextView mTextMessage = (TextView) findViewById(R.id.message_scan);
@@ -207,10 +225,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                         mCardNumberView.setImageDrawable(ContextCompat.getDrawable(MainActivity.this, R.drawable.ic_comiistupian));
                     } else {
                         Toast.makeText(MainActivity.this,
-                                "耗时" + (msg.arg2 / 1000) + "s", Toast.LENGTH_SHORT).show();
+                                "耗时" + (msg.arg2 / 100) / 10.0 + "s", Toast.LENGTH_SHORT).show();
                         // set result view
                         try {
-                            Bitmap bmp = BitmapFactory.decodeFile(scanAssistant.getResultView());
+                            bmp = BitmapFactory.decodeFile(scanAssistant.getResultView());
                             mCardNumberView.setImageBitmap(bmp);
                         } catch (Exception e) {
                             e.printStackTrace();
@@ -218,7 +236,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     }
                     // echo roi view
                     try {
-                        Bitmap bmp = BitmapFactory.decodeFile(scanAssistant.getMainView());
+                        bmp = BitmapFactory.decodeFile(scanAssistant.getMainView());
                         mCardView.setImageBitmap(bmp);
                     } catch (Exception e) {
                         e.printStackTrace();
