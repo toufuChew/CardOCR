@@ -35,6 +35,14 @@ public class CommonUtils {
     }
 
     public static void info(Object msg) {
+        info(false, msg);
+    }
+
+    public static void info(boolean error, Object msg) {
+        if (error) {
+            Log.e(TAG, objToString(msg));
+            return;
+        }
         Log.i(TAG, objToString(msg));
     }
 
@@ -93,4 +101,9 @@ public class CommonUtils {
         }
         return path.equals(origin);
     }
+
+    public static File openFile(String relativePath) {
+        return new File(APP_PATH + relativePath);
+    }
+
 }

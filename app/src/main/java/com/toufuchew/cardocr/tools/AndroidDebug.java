@@ -6,6 +6,7 @@ import android.graphics.BitmapFactory;
 import org.opencv.android.Utils;
 import org.opencv.core.Mat;
 
+import java.io.File;
 import java.util.Arrays;
 
 import static com.toufuchew.cardocr.tools.CommonUtils.APP_PATH;

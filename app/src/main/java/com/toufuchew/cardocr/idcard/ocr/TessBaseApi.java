@@ -26,6 +26,8 @@ public class TessBaseApi {
 
     private static final String TESSDATA = "tessdata";
 
+    private static final String WHITELIST = "0123456789 ";
+
     public TessBaseApi() {
         try {
             tessBaseAPI = new TessBaseAPI();
@@ -34,6 +36,7 @@ public class TessBaseApi {
         }
         try {
             tessBaseAPI.init(APP_PATH, lang);
+            tessBaseAPI.setVariable("tessedit_char_whitelist", WHITELIST);
         } catch (Exception e) {
             Log.e(TAG,"Tesseract initialized error: " + e.getMessage());
         }

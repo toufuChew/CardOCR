@@ -17,8 +17,10 @@ import org.opencv.core.MatOfPoint;
 import org.opencv.core.Point;
 import org.opencv.core.Rect;
 import org.opencv.core.Scalar;
+import org.opencv.imgcodecs.Imgcodecs;
 import org.opencv.imgproc.Imgproc;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -37,7 +39,7 @@ abstract public class Recognizer implements CardOCR{
 
     public static final float aspectRation = 1.579f;
 
-    public static final int standardWidth = 280;
+    public static final int standardWidth = 28;
 
     public static final String RESULT_VIEW = "DigitsView.jpg";
 
@@ -234,11 +236,16 @@ abstract public class Recognizer implements CardOCR{
         AndroidDebug.writeImage("concat." + CardFonts.fontTypeToString(producer.getFontType()) + ".jpg", concat);
         AndroidDebug.writeImage(RESULT_VIEW, producer.resultView);
         String digit = "";
+        String test = "";
         for (Mat m : normalizedDigits) {
             digit = instance.doOCR(m);
+            test += "("+digit+")";
+            if (producer.getFontType() != CardFonts.FontType.BLACK_FONT)
+                digit = fixIllegalChars(digit) + "";
             idNumbers += digit;
             updateProgress(2);
         }
+        AndroidDebug.log("number", test);
         return true;
     }
 
@@ -292,6 +299,32 @@ abstract public class Recognizer implements CardOCR{
             e.printStackTrace();
         }
         return bestRect;
+    }
+
+    /**
+     * repair wrong text chars Tesseract recognized.
+     * @param tessChars chars of tesseract-ocr result
+     * @return
+     */
+    abstract protected char fixIllegalChars(String tessChars);
+
+    private String classify(Mat input) {
+        File[] templates = CommonUtils.openFile("tessdata/digits").listFiles();
+        String path;
+        double score = 0;
+        String result = null;
+        for (File template : templates) {
+            Mat digit = Imgcodecs.imread(path = template.getAbsolutePath());
+            digit = CVGrayTransfer.grayTransfer(digit);
+            Mat out = new Mat();
+            Imgproc.matchTemplate(input, digit, out, Imgproc.TM_CCOEFF);
+            Core.MinMaxLocResult result1 = Core.minMaxLoc(out);
+            if (score < result1.maxVal) {
+                score = result1.maxVal;
+                result = path.substring(path.indexOf(".tif") - 1).substring(0, 1);
+            }
+        }
+        return result;
     }
 
     private void updateProgress(int val0) {

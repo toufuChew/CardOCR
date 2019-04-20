@@ -35,6 +35,17 @@ public class ScanAssistant extends Recognizer {
         return this.validDate;
     }
 
+    @Override
+    public boolean checkCardID() {
+        /**
+         * China UnionPay
+         */
+        if (idNumbers.charAt(1) == '2') {
+            idNumbers = "6" + idNumbers.substring(1);
+        }
+        return true;
+    }
+
     public String getResultView() {
         return CommonUtils.APP_PATH + RESULT_VIEW;
     }
@@ -52,7 +63,24 @@ public class ScanAssistant extends Recognizer {
     }
 
     public boolean scan() {
-        return doRecognize();
+        boolean result = doRecognize();
+        checkCardID();
+        return result;
+    }
+
+    @Override
+    protected char fixIllegalChars(String tessChars) {
+        int len = tessChars.length();
+        if (len == 1) return tessChars.charAt(0);
+        if (len == 0) return '7';
+        // digit '8' always would be recognized as '*3*'
+        if (tessChars.contains("3")) {
+            return '8';
+        }
+        if (tessChars.contains("11")) {
+            return '4';
+        }
+        return tessChars.charAt(len - 1);
     }
 
     public int getProgress() {

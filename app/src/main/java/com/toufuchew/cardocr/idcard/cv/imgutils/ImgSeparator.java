@@ -371,7 +371,8 @@ public abstract class ImgSeparator implements RectSeparator, DigitSeparator{
      */
     protected int getDigitWidth(List<Integer> cutting) throws Exception {
         if ((cutting.size() & 0x1) == 1) {
-            throw new Exception("ImgSeparator error: cutting.size() cannot be odd number in function getDigitWidth(List<Integer> c).");
+            CommonUtils.info(true, "ImgSeparator error: cutting.size() cannot be odd number in function getDigitWidth(List<Integer> c).");
+            cutting.remove(cutting.size() - 1);
         }
         final int window = 5;
         int [][]width = new int[2][cutting.size() >> 1];

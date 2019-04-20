@@ -5,4 +5,6 @@ public interface CardOCR {
     String getIDString();
 
     String getValidDateString();
+
+    boolean checkCardID();
 }
