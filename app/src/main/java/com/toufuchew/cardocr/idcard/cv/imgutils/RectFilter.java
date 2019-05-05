@@ -21,12 +21,11 @@ public interface RectFilter {
      */
     boolean isDigitRegion(Rect rect, int srcWidth, int srcHeight);
 
-    int HEIGHT_SCORE = 6;
-    int WIDTH_SCORE = 3;
     int IDRegionSimilarity(Mat m, Rect r, int rows, int cols);
 
     float FULL_AREA_RATIO = 0.8f;
     float FRAME_H_RATIO = 0.7f;
     void findMaxRect(Mat m, Rect r);
 
+    boolean digitAssertFailed(int srcWidth, int srcHeight, int refWidth, int refHeight);
 }

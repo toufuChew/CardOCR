@@ -22,7 +22,9 @@ import org.opencv.imgproc.Imgproc;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.logging.Filter;
 
 import static com.toufuchew.cardocr.tools.AndroidDebug.log;
 
@@ -98,10 +100,12 @@ abstract public class Recognizer implements CardOCR{
          * @param cuttingList
          */
         @Override
-        protected void paintDigits(List<Integer> cuttingList) {
-            super.paintDigits(cuttingList);
+        protected void paintDigits(List<Integer> cuttingList, int standardWidth) {
+            super.paintDigits(cuttingList, standardWidth);
             Mat digits = new Mat(rgbMat, rectOfDigitRow);
             Rect cutter = new Rect(0, 0, 0, rectOfDigitRow.height);
+            int standardHeight = digits.rows();
+            Filter filter = new Filter(null);
             List<Mat> digitList = new ArrayList<>();
             for (int i = 1; i < cuttingList.size(); i++) {
                 if ((i & 0x1) == 0)
@@ -110,6 +114,8 @@ abstract public class Recognizer implements CardOCR{
                 int x2 = cuttingList.get(i);
                 cutter.x = x1; cutter.width = x2 - x1;
                 Rect ofY = cutEdgeOfY(new Mat(getBinDigitRegion(), cutter));
+                if (filter.digitAssertFailed(ofY.width, ofY.height, standardWidth, standardHeight))
+                    continue;
                 digitList.add(new Mat(digits, new Rect(x1, ofY.y, cutter.width, ofY.height)));
             }
             setResultView(digitList);
@@ -308,29 +314,32 @@ abstract public class Recognizer implements CardOCR{
      */
     abstract protected char fixIllegalChars(String tessChars);
 
-    private String classify(Mat input) {
-        File[] templates = CommonUtils.openFile("tessdata/digits").listFiles();
-        String path;
-        double score = 0;
-        String result = null;
-        for (File template : templates) {
-            Mat digit = Imgcodecs.imread(path = template.getAbsolutePath());
-            digit = CVGrayTransfer.grayTransfer(digit);
-            Mat out = new Mat();
-            Imgproc.matchTemplate(input, digit, out, Imgproc.TM_CCOEFF);
-            Core.MinMaxLocResult result1 = Core.minMaxLoc(out);
-            if (score < result1.maxVal) {
-                score = result1.maxVal;
-                result = path.substring(path.indexOf(".tif") - 1).substring(0, 1);
-            }
-        }
-        return result;
-    }
-
     private void updateProgress(int val0) {
         progress += val0;
         if (progress > 100)
             progress = 100;
     }
 
+    @Override
+    public boolean isIDCard() {
+        if (idNumbers.length() < 18)
+            return false;
+        String seq = idNumbers.substring(idNumbers.length() - 18, idNumbers.length());
+        int year = Integer.decode(seq.substring(6, 8));
+        if (year < 19 || year > 20) {
+            return false;
+        }
+        int checksum = idNumbers.charAt(idNumbers.length() - 1) - '0';
+        byte[] mul = {7, 9, 10, 5, 8, 4, 2, 1, 6, 3, 7, 9, 10, 5, 8, 4, 2};
+        final byte div = 11;
+        int sum = 0;
+        for (int i = 0; i < seq.length() - 1; i++) {
+            sum += mul[i] * (seq.charAt(i) - '0');
+        }
+        byte[] mod = {1, 0, -1, 9, 8, 7, 6, 5, 4, 3, 2};
+        if (sum % div != 2 && checksum != mod[sum % div]) {
+            return false;
+        }
+        return true;
+    }
 }

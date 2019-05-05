@@ -4,7 +4,7 @@ import android.content.Context;
 import android.support.v7.app.AppCompatActivity;
 
 public interface RequestPermissionsTool {
-    final int MULTIPLE_PERMISSIONS = 0x10;
+    int MULTIPLE_PERMISSIONS = 0x10;
 
     /**
      * request manifests permissions

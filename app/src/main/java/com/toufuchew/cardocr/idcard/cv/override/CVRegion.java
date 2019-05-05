@@ -162,14 +162,14 @@ public class CVRegion extends ImgSeparator {
             output.addAll(elem.toNodeList());
         }
         output.sort();
-        paintDigits(output.toSimpleList());
+        paintDigits(output.toSimpleList(), ref);
     }
 
     public CardFonts.FontType getFontType() {
         return fontType;
     }
 
-    final static class Filter extends ImgFilter {
+    protected final static class Filter extends ImgFilter {
         private Mat src;
         public Filter(Mat src) {
             this.src = src;
@@ -578,7 +578,11 @@ public class CVRegion extends ImgSeparator {
                 break;
             }
         }
-        return new Rect(0, upperY, cols, lowerY - upperY);
+        Rect result = new Rect(0, upperY, cols, lowerY - upperY);
+        if (result.height < 0.8 * rows) {
+            result.height = rows - upperY;
+        }
+        return result;
     }
 
     @Override
@@ -588,11 +592,11 @@ public class CVRegion extends ImgSeparator {
     public void drawROI(Rect rect, boolean isAims, String msg) {}
 
     @Override
-    protected void paintDigits(List<Integer> cuttingList) {
+    protected void paintDigits(List<Integer> cuttingList, int refWidth) {
         Mat digits;
-        if (getFontType() == CardFonts.FontType.BLACK_FONT)
-            digits = getBinDigitRegion();
-        else digits = new Mat(grayMat, rectOfDigitRow);
+        digits = new Mat(grayMat, rectOfDigitRow);
+        int refHeight = digits.rows();
+        Filter filter = new Filter(null);
         Rect cutter = new Rect(0, 0, 0, rectOfDigitRow.height);
         for (int i = 1; i < cuttingList.size(); i++) {
             if ((i & 0x1) == 0)
@@ -601,6 +605,10 @@ public class CVRegion extends ImgSeparator {
             int x2 = cuttingList.get(i);
             cutter.x = x1; cutter.width = x2 - x1;
             Rect ofY = cutEdgeOfY(new Mat(getBinDigitRegion(), cutter));
+            if (filter.digitAssertFailed(cutter.width, ofY.height, refWidth, refHeight)) {
+                //jump next
+                continue;
+            }
             matListOfDigit.add(new Mat(digits, new Rect(x1, ofY.y, cutter.width, ofY.height)));
         }
     }

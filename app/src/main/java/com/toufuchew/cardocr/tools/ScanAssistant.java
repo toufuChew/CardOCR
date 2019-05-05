@@ -37,11 +37,22 @@ public class ScanAssistant extends Recognizer {
 
     @Override
     public boolean checkCardID() {
+        char first = idNumbers.charAt(0);
+        if (first < '3' || first > '6') {
+            idNumbers = '6' + idNumbers.substring(1);
+        }
         /**
          * China UnionPay
          */
         if (idNumbers.charAt(1) == '2') {
             idNumbers = "6" + idNumbers.substring(1);
+        }
+
+        /**
+         * ID card
+         */
+        if (isIDCard()) {
+            idNumbers = "身份证: " + idNumbers.substring(idNumbers.length() - 18, idNumbers.length());
         }
         return true;
     }
@@ -73,14 +84,7 @@ public class ScanAssistant extends Recognizer {
         int len = tessChars.length();
         if (len == 1) return tessChars.charAt(0);
         if (len == 0) return '7';
-        // digit '8' always would be recognized as '*3*'
-        if (tessChars.contains("3")) {
-            return '8';
-        }
-        if (tessChars.contains("11")) {
-            return '4';
-        }
-        return tessChars.charAt(len - 1);
+        return tessChars.charAt(0);
     }
 
     public int getProgress() {

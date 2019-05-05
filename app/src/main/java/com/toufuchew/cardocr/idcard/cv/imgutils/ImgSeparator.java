@@ -1,16 +1,11 @@
 package com.toufuchew.cardocr.idcard.cv.imgutils;
 
-import com.toufuchew.cardocr.idcard.cv.override.CVGrayTransfer;
 import com.toufuchew.cardocr.tools.AndroidDebug;
 import com.toufuchew.cardocr.tools.CommonUtils;
 
-import org.opencv.core.Core;
 import org.opencv.core.CvType;
 import org.opencv.core.Mat;
-import org.opencv.core.MatOfPoint;
 import org.opencv.core.Rect;
-import org.opencv.core.Size;
-import org.opencv.imgproc.Imgproc;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -65,13 +60,6 @@ public abstract class ImgSeparator implements RectSeparator, DigitSeparator{
 
         }
         return separates;
-//        drawLine(buff, edge.y * cols, cols);
-//        drawLine(buff, (edge.y + edge.height) * cols, cols);
-//        byte out[] = new byte[src.cols() * src.rows()];
-//        System.arraycopy(buff, edge.y * cols, out, edge.y * cols, edge.height * cols);
-//        Mat m = Mat.zeros(src.size(), src.type());
-//        m.put(0, 0, out);
-//        return m;
     }
 
     /**
@@ -448,26 +436,12 @@ public abstract class ImgSeparator implements RectSeparator, DigitSeparator{
 
     abstract public void merge(SplitList splitList) throws Exception;
 
-    protected void paintDigits(List<Integer> cuttingList) {
-        for (int i = 1; i < cuttingList.size(); i++) {
-            if ((i & 0x1) == 0)
-                continue;
-            int x1 = cuttingList.get(i - 1);
-            int x2 = cuttingList.get(i);
-            Mat crop = new Mat(grayMat, new Rect(x1 + rectOfDigitRow.x, rectOfDigitRow.y, x2 - x1, rectOfDigitRow.height));
-            byte buff[] = new byte[crop.rows() * crop.cols()];
-            crop.get(0, 0, buff);
-            Mat dst = Mat.zeros(new Size(rectOfDigitRow.width, rectOfDigitRow.height), grayMat.type());
-            byte out[] = new byte[dst.cols() * dst.rows()];
-            for (int j = 0; j < crop.rows(); j++)
-                System.arraycopy(buff, j * crop.cols(), out, j * dst.cols(), crop.cols());
-            dst.put(0, 0, out);
-            dst = CVGrayTransfer.resizeMat(dst, 380, false);
-            matListOfDigit.add(dst);
-        }
-        Mat dst = new Mat();
-        Core.vconcat(matListOfDigit, dst);
-    }
+    /**
+     * Splitting digits with cuttingList.
+     * @param cuttingList
+     * @param refWidth standard width of digits
+     */
+    abstract protected void paintDigits(List<Integer> cuttingList, int refWidth);
 
     abstract protected void cutEdgeOfX(Rect rect);
 

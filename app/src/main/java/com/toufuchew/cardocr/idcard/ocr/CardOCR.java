@@ -7,4 +7,6 @@ public interface CardOCR {
     String getValidDateString();
 
     boolean checkCardID();
+
+    boolean isIDCard();
 }

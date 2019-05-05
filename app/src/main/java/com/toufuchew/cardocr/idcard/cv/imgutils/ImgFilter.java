@@ -1,6 +1,8 @@
 package com.toufuchew.cardocr.idcard.cv.imgutils;
 
 
+import com.toufuchew.cardocr.tools.AndroidDebug;
+
 import org.opencv.core.Core;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfPoint;
@@ -88,6 +90,16 @@ public class ImgFilter implements RectFilter {
                 break;
             }
         }
+    }
+
+    @Override
+    public boolean digitAssertFailed(int srcWidth, int srcHeight, int refWidth, int refHeight) {
+        if (srcWidth < refWidth * 0.45 || srcHeight < refHeight * 0.4) {
+            AndroidDebug.log("digitAssertFailed", "failed with width=" + srcWidth + ", height=" + srcHeight
+            + " where referenced width=" + refWidth + ", height=" + refHeight);
+            return true;
+        }
+        return false;
     }
 
 }
