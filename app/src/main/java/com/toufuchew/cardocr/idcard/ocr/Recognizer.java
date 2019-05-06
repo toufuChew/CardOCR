@@ -324,7 +324,7 @@ abstract public class Recognizer implements CardOCR{
     public boolean isIDCard() {
         if (idNumbers.length() < 18)
             return false;
-        String seq = idNumbers.substring(idNumbers.length() - 18, idNumbers.length());
+        String seq = idNumbers.substring(idNumbers.length() - 18, idNumbers.length()).replaceAll(" ", "");
         int year = Integer.decode(seq.substring(6, 8));
         if (year < 19 || year > 20) {
             return false;
@@ -339,6 +339,9 @@ abstract public class Recognizer implements CardOCR{
         byte[] mod = {1, 0, -1, 9, 8, 7, 6, 5, 4, 3, 2};
         if (sum % div != 2 && checksum != mod[sum % div]) {
             return false;
+        }
+        if (sum % div == 2) {
+            idNumbers = idNumbers.substring(0, idNumbers.length() - 1) + "X";
         }
         return true;
     }

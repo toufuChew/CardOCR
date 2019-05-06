@@ -25,8 +25,6 @@ public class ScanAssistant extends Recognizer {
 
     @Override
     public String getIDString() {
-        if (idNumbers.length() > 19)
-            return idNumbers.substring(0, 19);
         return idNumbers;
     }
 
@@ -37,6 +35,13 @@ public class ScanAssistant extends Recognizer {
 
     @Override
     public boolean checkCardID() {
+        /**
+         * ID card
+         */
+        if (isIDCard()) {
+            idNumbers = "身份证: " + idNumbers.substring(idNumbers.length() - 18, idNumbers.length());
+            return true;
+        }
         char first = idNumbers.charAt(0);
         if (first < '3' || first > '6') {
             idNumbers = '6' + idNumbers.substring(1);
@@ -46,13 +51,6 @@ public class ScanAssistant extends Recognizer {
          */
         if (idNumbers.charAt(1) == '2') {
             idNumbers = "6" + idNumbers.substring(1);
-        }
-
-        /**
-         * ID card
-         */
-        if (isIDCard()) {
-            idNumbers = "身份证: " + idNumbers.substring(idNumbers.length() - 18, idNumbers.length());
         }
         return true;
     }
