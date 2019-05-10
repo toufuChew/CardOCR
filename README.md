@@ -1,4 +1,5 @@
 # CardOCR
+- 点击下载<a href="https://github.com/toufuChew/CardOCR/releases">APK</a>
 ### 特点
 纯 Java 实现，依赖库两个，OpenCV + Tesseract，OpenCV用于一系列图像形态学变换等预处理过程。后者用于文字识别，识别分割后的数字图像。
 识别速度平均 500 ms内，卡号定位与分割效果较可观。
