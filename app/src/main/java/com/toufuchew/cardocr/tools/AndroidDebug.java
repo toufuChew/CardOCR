@@ -34,9 +34,16 @@ public final class AndroidDebug {
     public static Mat readImage(String name) {
         BitmapFactory.Options options = new BitmapFactory.Options();
 		Bitmap bitmap = BitmapFactory.decodeFile(APP_PATH + name, options);
+		if (bitmap == null)
+		    return null;
 		Mat mat = new Mat();
 		Utils.bitmapToMat(bitmap, mat);
 		return mat;
+    }
+
+    public static void removeImage(String name) {
+        File rm = new File(APP_PATH + name);
+        rm.delete();
     }
 
     public static void log(String tag, Object obj) {
